@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Informasi & Absensi — MAPALA MUCI</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            navy: {
+              950: '#071120',
+              900: '#0b172a',
+              850: '#0d1b30',
+              800: '#11223d',
+              750: '#162b4d',
+              700: '#1b2d48',
+            },
+            amber: {
+              450: '#f59e0b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #071120;
+      color: #f1f5f9;
+      font-family: 'Inter', sans-serif;
+    }
+    h1, h2, h3, .font-heading {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #071120;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1b2d48;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #2b456d;
+    }
+    .sidebar-item-active {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.14) 0%, rgba(22, 43, 77, 0.9) 35%, #162b4d 100%);
+      border-left: 3px solid #f59e0b;
+      color: #ffffff;
+    }
+    .sidebar-item-inactive {
+      border-left: 3px solid transparent;
+      color: #94a3b8;
+    }
+    .sidebar-item-inactive:hover {
+      background-color: rgba(17, 34, 61, 0.65);
+      color: #e2e8f0;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-navy-950 text-slate-100 antialiased selection:bg-amber-500 selection:text-navy-950">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-4 right-4 z-[60] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- Custom Confirm Modal -->
+  <div id="confirm-modal" class="fixed inset-0 z-[55] hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div class="bg-navy-850 border border-navy-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+        </div>
+        <h3 id="confirm-title" class="text-lg font-bold text-white">Konfirmasi Tindakan</h3>
+      </div>
+      <p id="confirm-message" class="text-sm text-slate-300 mb-6 leading-relaxed">Apakah Anda yakin ingin melanjutkan?</p>
+      <div class="flex justify-end gap-3">
+        <button id="confirm-cancel-btn" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 bg-navy-800 hover:bg-navy-700 border border-navy-700 transition">Batal</button>
+        <button id="confirm-ok-btn" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/20 transition">Ya, Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 1. HALAMAN LOGIN (TERTUTUP & AMAN) ==================== -->
+  <div id="login-view" class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-navy-950">
+    <div class="absolute -top-32 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="w-full max-w-md z-10">
+      <div class="text-center mb-7">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-navy-850 border border-navy-700 shadow-xl mb-4 relative">
+          <div class="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-amber-400">
+            <i class="fa-regular fa-compass text-2xl"></i>
+          </div>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+          MAPALA <span class="text-amber-400">MUCI</span>
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">Sistem Informasi Piket Sekretariat, Rapat & Kegiatan</p>
+      </div>
+
+      <div class="bg-navy-850 border border-navy-700 rounded-3xl shadow-2xl overflow-hidden">
+        <div class="grid grid-cols-2 bg-navy-900 p-1.5 border-b border-navy-700">
+          <button type="button" id="tab-login-anggota" onclick="switchLoginTab('anggota')" class="py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 bg-navy-750 text-amber-400 border border-navy-700 shadow">
+            <i class="fa-solid fa-user-check"></i> Login Anggota
+          </button>
+          <button type="button" id="tab-login-admin" onclick="switchLoginTab('admin')" class="py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200">
+            <i class="fa-solid fa-shield-halved"></i> Login Admin
+          </button>
+        </div>
+
+        <div class="p-6 sm:p-8">
+          <!-- Form Login Anggota -->
+          <form id="form-login-anggota" onsubmit="handleLoginAnggota(event)" class="space-y-4">
+            <div class="bg-navy-900/90 border border-navy-700 rounded-2xl p-3.5 flex items-start gap-3">
+              <div class="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                <i class="fa-solid fa-id-card-clip text-sm"></i>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-white">Portal Absensi Anggota</p>
+                <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">Gunakan Username Anggota dan Password (Nomor NPAM) yang terdaftar.</p>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Username Anggota</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                  <i class="fa-solid fa-user text-xs"></i>
+                </span>
+                <input type="text" id="login-anggota-user" required autocomplete="off" placeholder="Masukkan username anggota" class="w-full pl-10 pr-4 py-3 rounded-xl bg-navy-900 border border-navy-700 text-white placeholder-slate-500 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Password (Nomor NPAM)</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                  <i class="fa-solid fa-lock text-xs"></i>
+                </span>
+                <input type="password" id="login-anggota-pass" required placeholder="Masukkan Nomor NPAM" class="w-full pl-10 pr-10 py-3 rounded-xl bg-navy-900 border border-navy-700 text-white placeholder-slate-500 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition">
+                <button type="button" onclick="togglePass('login-anggota-pass', this)" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300">
+                  <i class="fa-solid fa-eye text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 font-extrabold text-sm shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 mt-2">
+              <span>Masuk ke Portal Anggota</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </form>
+
+          <!-- Form Login Admin -->
+          <form id="form-login-admin" onsubmit="handleLoginAdmin(event)" class="space-y-4 hidden">
+            <div class="bg-navy-900/90 border border-navy-700 rounded-2xl p-3.5 flex items-start gap-3">
+              <div class="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                <i class="fa-solid fa-user-shield text-sm"></i>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-white">Otorisasi Pengurus / Admin</p>
+                <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">Akses penuh pengelolaan jadwal piket, verifikasi absensi, sesi rapat, dan database anggota.</p>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Username Admin</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                  <i class="fa-solid fa-shield-halved text-xs"></i>
+                </span>
+                <input type="text" id="login-admin-user" required autocomplete="off" placeholder="Masukkan username admin" class="w-full pl-10 pr-4 py-3 rounded-xl bg-navy-900 border border-navy-700 text-white placeholder-slate-500 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Password Admin</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                  <i class="fa-solid fa-key text-xs"></i>
+                </span>
+                <input type="password" id="login-admin-pass" required placeholder="Masukkan password admin" class="w-full pl-10 pr-10 py-3 rounded-xl bg-navy-900 border border-navy-700 text-white placeholder-slate-500 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition">
+                <button type="button" onclick="togglePass('login-admin-pass', this)" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300">
+                  <i class="fa-solid fa-eye text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 font-extrabold text-sm shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 mt-2">
+              <i class="fa-solid fa-right-to-bracket"></i>
+              <span>Masuk Dashboard Admin</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <p class="text-center text-[11px] text-slate-500 mt-5">&copy; 2026 Mapala MUCI • Sekretariat Operasional</p>
+    </div>
+  </div>
+
+  <!-- ==================== 2. LAYOUT DASHBOARD UTAMA ==================== -->
+  <div id="dashboard-view" class="hidden min-h-screen flex bg-navy-950">
+    <div id="sidebar-backdrop" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-black/70 z-30 hidden lg:hidden backdrop-blur-xs"></div>
+
+    <aside id="app-sidebar" class="fixed lg:sticky top-0 left-0 z-40 h-screen w-[264px] shrink-0 bg-navy-900 border-r border-navy-700 flex flex-col justify-between transition-transform duration-300 -translate-x-full lg:translate-x-0">
+      <div class="flex flex-col flex-1 overflow-y-auto">
+        <div class="p-5 border-b border-navy-700/80 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-navy-850 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-inner">
+              <i class="fa-regular fa-compass text-xl"></i>
+            </div>
+            <div>
+              <div class="font-heading font-extrabold text-base tracking-wide text-white leading-tight">
+                MAPALA <span class="text-amber-400">MUCI</span>
+              </div>
+              <div id="sidebar-mode-badge" class="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 mt-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="sidebar-mode-text">Admin Mode</span>
+              </div>
+            </div>
+          </div>
+          <button onclick="toggleMobileSidebar(false)" class="lg:hidden text-slate-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <div id="sidebar-member-card" class="hidden mx-3.5 mt-4 p-3 rounded-xl bg-navy-850 border border-navy-700">
+          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Anggota Login</p>
+          <p id="sidebar-member-name" class="text-xs font-bold text-white truncate mt-0.5">-</p>
+          <p id="sidebar-member-npam" class="text-[11px] font-mono text-amber-400 mt-0.5">-</p>
+        </div>
+
+        <div class="px-5 pt-5 pb-2">
+          <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">MENU UTAMA</span>
+        </div>
+
+        <nav id="sidebar-nav-list" class="px-3 space-y-1 flex-1"></nav>
+      </div>
+
+      <div class="p-3.5 border-t border-navy-700/80 space-y-2 bg-navy-900">
+        <div id="sidebar-admin-actions" class="space-y-2">
+          <button onclick="saveAllChangesManual()" class="w-full py-2.5 px-3.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Simpan Semua Perubahan</span>
+          </button>
+          <button onclick="confirmResetDemo()" class="w-full py-2.5 px-3.5 rounded-xl bg-navy-800 hover:bg-navy-750 border border-navy-700 text-slate-300 text-xs font-semibold transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-rotate-left text-amber-400"></i>
+            <span>Reset Data Awal Demo</span>
+          </button>
+        </div>
+
+        <button onclick="handleLogout()" class="w-full py-2.5 px-3.5 rounded-xl bg-red-950/70 hover:bg-red-900/80 border border-red-800/60 text-red-300 text-xs font-bold transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Keluar (Logout)</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col min-w-0">
+      <header class="px-5 sm:px-8 pt-5 pb-4 border-b border-navy-700/50 bg-navy-950/90 sticky top-0 z-20 backdrop-blur-md">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-start sm:items-center gap-3">
+            <button onclick="toggleMobileSidebar(true)" class="lg:hidden mt-0.5 sm:mt-0 p-2.5 rounded-xl bg-navy-850 border border-navy-700 text-slate-200 hover:text-amber-400">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+            <div>
+              <h1 id="page-header-title" class="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Ringkasan & Monitoring Absensi</h1>
+              <p id="page-header-subtitle" class="text-xs sm:text-sm text-slate-400 mt-0.5">Pantau aktivitas piket sekretariat, kehadiran rapat, dan agenda Mapala MUCI.</p>
+            </div>
+          </div>
+
+          <div class="self-start md:self-auto inline-flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-navy-850 border border-navy-700 shadow-sm">
+            <div class="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
+              <i class="fa-regular fa-clock text-sm"></i>
+            </div>
+            <div class="text-left">
+              <div id="live-date-text" class="text-xs font-bold text-slate-200 leading-tight">Jumat, 13 November 2026</div>
+              <div id="live-time-text" class="text-[11px] font-mono font-semibold text-amber-400 mt-0.5">02:36:20 WIB</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 p-5 sm:p-8 max-w-[1440px] w-full mx-auto space-y-6">
+
+        <!-- KONTEN ADMIN -->
+        <div id="admin-workspace" class="hidden space-y-6">
+          <section id="admin-tab-ringkasan" class="admin-panel space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-blue-500/15 border border-blue-500/25 text-blue-400 flex items-center justify-center text-lg shrink-0">
+                  <i class="fa-solid fa-users"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-slate-400">Total Anggota Aktif</p>
+                  <div id="stat-admin-members" class="text-2xl font-extrabold text-white mt-0.5">0</div>
+                </div>
+              </div>
+
+              <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/25 text-amber-400 flex items-center justify-center text-lg shrink-0">
+                  <i class="fa-solid fa-calendar-day"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-slate-400">Jadwal Piket Hari Ini</p>
+                  <div class="flex items-baseline gap-1.5 mt-0.5">
+                    <span id="stat-admin-today-piket" class="text-2xl font-extrabold text-white">0</span>
+                    <span class="text-xs text-slate-400">orang</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 flex items-center justify-center text-lg shrink-0">
+                  <i class="fa-solid fa-check-double"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-slate-400">Total Riwayat Absen Piket</p>
+                  <div id="stat-admin-logs" class="text-2xl font-extrabold text-white mt-0.5">0</div>
+                </div>
+              </div>
+
+              <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-500/15 border border-indigo-500/25 text-indigo-400 flex items-center justify-center text-lg shrink-0">
+                  <i class="fa-solid fa-handshake"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-slate-400">Sesi Rapat Dibuka</p>
+                  <div id="stat-admin-rapat" class="text-2xl font-extrabold text-white mt-0.5">0</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div class="lg:col-span-7 bg-navy-850 border border-navy-700 rounded-2xl p-5 sm:p-6">
+                <div class="flex items-center justify-between gap-2 mb-1">
+                  <h2 class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-broom text-amber-400"></i>
+                    <span>Petugas Piket Hari Ini ( <span id="overview-today-dayname" class="text-amber-400">Jumat</span> )</span>
+                  </h2>
+                  <button onclick="switchAdminMenu('jadwal')" class="text-xs font-bold text-amber-400 hover:text-amber-300 transition">
+                    Edit Jadwal &rarr;
+                  </button>
+                </div>
+                <p class="text-xs text-slate-400 mb-4">Klik tombol <strong class="text-slate-200">Tandai Hadir</strong> untuk mencatat absen piket anggota secara cepat.</p>
+                <div id="overview-today-piket-list" class="space-y-2.5 max-h-[470px] overflow-y-auto pr-1"></div>
+              </div>
+
+              <div class="lg:col-span-5 bg-navy-850 border border-navy-700 rounded-2xl p-5 sm:p-6 flex flex-col">
+                <div class="flex items-center justify-between gap-2 mb-4">
+                  <h2 class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-tower-broadcast text-emerald-400"></i>
+                    <span>Status Sesi Rapat</span>
+                  </h2>
+                  <button onclick="switchAdminMenu('rapat')" class="text-xs font-bold text-amber-400 hover:text-amber-300 transition">
+                    Kelola Rapat &rarr;
+                  </button>
+                </div>
+                <div id="overview-rapat-status-box" class="flex-1 flex flex-col justify-center"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="admin-tab-jadwal" class="admin-panel hidden space-y-6">
+            <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 class="text-lg font-extrabold text-white">Pengaturan Jadwal Piket Harian</h2>
+                <p class="text-xs text-slate-400 mt-0.5">Tambahkan atau hapus anggota yang bertugas piket sekretariat untuk setiap hari (Senin – Minggu).</p>
+              </div>
+              <form onsubmit="handleAdminAddJadwal(event)" class="flex flex-wrap items-center gap-2.5">
+                <select id="admin-jadwal-day" class="px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-xs font-bold text-white outline-none focus:border-amber-500">
+                  <option value="Senin">Senin</option>
+                  <option value="Selasa">Selasa</option>
+                  <option value="Rabu">Rabu</option>
+                  <option value="Kamis">Kamis</option>
+                  <option value="Jumat">Jumat</option>
+                  <option value="Sabtu">Sabtu</option>
+                  <option value="Minggu">Minggu</option>
+                </select>
+                <select id="admin-jadwal-member" class="px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-xs font-semibold text-white outline-none focus:border-amber-500 min-w-[210px]"></select>
+                <button type="submit" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 text-xs font-extrabold transition flex items-center gap-1.5">
+                  <i class="fa-solid fa-plus"></i> Tambah ke Jadwal
+                </button>
+              </form>
+            </div>
+            <div id="admin-jadwal-cards" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+          </section>
+
+          <section id="admin-tab-absen-piket" class="admin-panel hidden space-y-6">
+            <div class="bg-navy-850 border border-navy-700 rounded-2xl overflow-hidden">
+              <div class="p-5 sm:p-6 border-b border-navy-700 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                  <h2 class="text-lg font-extrabold text-white">Riwayat & Edit Data Absensi Piket</h2>
+                  <p class="text-xs text-slate-400 mt-0.5">Periksa foto dokumentasi piket anggota, ubah status kehadiran, edit catatan, atau hapus riwayat absen.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <input type="date" id="admin-filter-piket-date" onchange="renderAdminPiketTable()" class="px-3 py-2 rounded-xl bg-navy-900 border border-navy-700 text-xs text-slate-200 outline-none focus:border-amber-500">
+                  <button onclick="document.getElementById('admin-filter-piket-date').value=''; renderAdminPiketTable()" class="px-3 py-2 rounded-xl bg-navy-800 hover:bg-navy-750 border border-navy-700 text-xs font-semibold text-slate-300">Semua Tanggal</button>
+                  <button onclick="openAdminPiketModal()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 text-xs font-extrabold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i> Tambah Manual
+                  </button>
+                </div>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-navy-900 text-slate-400 text-[11px] uppercase tracking-wider border-b border-navy-700">
+                      <th class="py-3.5 px-4 font-bold">Tanggal & Hari</th>
+                      <th class="py-3.5 px-4 font-bold">Anggota & NPAM</th>
+                      <th class="py-3.5 px-4 font-bold">Waktu</th>
+                      <th class="py-3.5 px-4 font-bold">Status (Ubah Cepat)</th>
+                      <th class="py-3.5 px-4 font-bold">Dokumentasi & Keterangan</th>
+                      <th class="py-3.5 px-4 font-bold text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-piket-tbody" class="divide-y divide-navy-700/70 text-sm"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section id="admin-tab-rapat" class="admin-panel hidden space-y-6">
+            <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5 sm:p-6">
+              <h2 class="text-lg font-extrabold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-handshake text-amber-400"></i> Buat Sesi Absensi Rapat Baru
+              </h2>
+              <form onsubmit="handleAdminCreateRapat(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="sm:col-span-2">
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Judul / Agenda Rapat</label>
+                  <input type="text" id="input-rapat-judul" required placeholder="Contoh: Rapat Koordinasi Ekspedisi" class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Tanggal Rapat</label>
+                  <input type="date" id="input-rapat-tanggal" required class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Waktu (WIB)</label>
+                  <input type="time" id="input-rapat-waktu" required value="19:30" class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Lokasi Rapat</label>
+                  <input type="text" id="input-rapat-lokasi" required placeholder="Contoh: Sekretariat Mapala MUCI" class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Status Sesi Absen</label>
+                  <select id="input-rapat-status" class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                    <option value="Dibuka">Dibuka</option>
+                    <option value="Ditutup">Ditutup</option>
+                  </select>
+                </div>
+                <div class="flex items-end">
+                  <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 font-extrabold text-sm transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus-circle"></i> Buat Sesi Rapat
+                  </button>
+                </div>
+              </form>
+            </div>
+            <div id="admin-rapat-container" class="space-y-4"></div>
+          </section>
+
+          <section id="admin-tab-anggota" class="admin-panel hidden space-y-6">
+            <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5 sm:p-6">
+              <div class="mb-4">
+                <h2 id="form-member-heading" class="text-lg font-extrabold text-white flex items-center gap-2">
+                  <i class="fa-solid fa-user-plus text-amber-400"></i> Tambah / Edit Data & Akun Login Anggota
+                </h2>
+                <p class="text-xs text-slate-400 mt-0.5">Admin dapat mengubah Nama, Username Login, maupun Nomor NPAM agar keamanan akun tiap anggota terjaga.</p>
+              </div>
+              <form onsubmit="handleAdminSaveMember(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
+                <input type="hidden" id="edit-member-id">
+                <div class="lg:col-span-3">
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nama Lengkap</label>
+                  <input type="text" id="input-member-nama" required placeholder="Nama lengkap" class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                </div>
+                <div class="lg:col-span-3">
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Username Login</label>
+                  <input type="text" id="input-member-username" required placeholder="Username unik" class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                </div>
+                <div class="lg:col-span-2">
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Password (NPAM)</label>
+                  <input type="text" id="input-member-npam" required placeholder="MUCI-125" class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                </div>
+                <div class="lg:col-span-2">
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Divisi</label>
+                  <select id="input-member-divisi" class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                    <option value="Gunung Hutan">Gunung Hutan</option>
+                    <option value="Rock Climbing">Rock Climbing</option>
+                    <option value="Caving">Caving</option>
+                    <option value="Konservasi">Konservasi</option>
+                    <option value="Lingkungan Hidup & Pengurus">Lingkungan Hidup & Pengurus</option>
+                  </select>
+                </div>
+                <div class="lg:col-span-2 flex items-end gap-2">
+                  <button type="submit" id="btn-save-member" class="flex-1 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 font-extrabold text-sm transition">Simpan</button>
+                  <button type="button" id="btn-cancel-member" onclick="resetAdminMemberForm()" class="hidden py-2.5 px-3 rounded-xl bg-navy-800 hover:bg-navy-700 border border-navy-700 text-slate-300 text-xs font-bold">Batal</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="bg-navy-850 border border-navy-700 rounded-2xl overflow-hidden">
+              <div class="p-5 border-b border-navy-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h3 class="text-base font-extrabold text-white">Daftar Seluruh Anggota Mapala MUCI</h3>
+                <div class="relative w-full sm:w-64">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                  <input type="text" id="admin-search-member" onkeyup="renderAdminMembersTable()" placeholder="Cari nama, username, NPAM..." class="w-full pl-9 pr-3.5 py-2 rounded-xl bg-navy-900 border border-navy-700 text-xs text-white outline-none focus:border-amber-500">
+                </div>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-navy-900 text-slate-400 text-[11px] uppercase tracking-wider border-b border-navy-700">
+                      <th class="py-3.5 px-4 font-bold">No</th>
+                      <th class="py-3.5 px-4 font-bold">Nama Lengkap</th>
+                      <th class="py-3.5 px-4 font-bold">Username Login</th>
+                      <th class="py-3.5 px-4 font-bold">Password (NPAM)</th>
+                      <th class="py-3.5 px-4 font-bold">Divisi</th>
+                      <th class="py-3.5 px-4 font-bold text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-members-tbody" class="divide-y divide-navy-700/70 text-sm"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section id="admin-tab-divisi" class="admin-panel hidden space-y-6">
+            <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5 sm:p-6">
+              <h2 class="text-lg font-extrabold text-white">Struktur Divisi & Keanggotaan Mapala MUCI</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Pengelompokan otomatis anggota berdasarkan divisi operasional masing-masing.</p>
+            </div>
+            <div id="admin-divisi-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+          </section>
+
+          <section id="admin-tab-kegiatan" class="admin-panel hidden space-y-6">
+            <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5 sm:p-6">
+              <h2 id="form-kegiatan-heading" class="text-lg font-extrabold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-bullhorn text-amber-400"></i> Buat / Edit Jadwal & Pemberitahuan Kegiatan
+              </h2>
+              <form onsubmit="handleAdminSaveKegiatan(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <input type="hidden" id="edit-kegiatan-id">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Judul Kegiatan</label>
+                  <input type="text" id="input-kegiatan-judul" required placeholder="Contoh: Ekspedisi Gunung Ciremai" class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Kategori</label>
+                  <select id="input-kegiatan-kategori" class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                    <option value="Ekspedisi & Pendakian">Ekspedisi & Pendakian</option>
+                    <option value="Diklatsar">Diklatsar</option>
+                    <option value="Latihan Rutin">Latihan Rutin</option>
+                    <option value="Konservasi & Bakti Alam">Konservasi & Bakti Alam</option>
+                    <option value="Musyawarah & Rapat Besar">Musyawarah & Rapat Besar</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Tanggal Pelaksanaan</label>
+                  <input type="date" id="input-kegiatan-tanggal" required class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Lokasi Kegiatan</label>
+                  <input type="text" id="input-kegiatan-lokasi" required placeholder="Contoh: Jalur Linggarjati" class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Deskripsi & Perlengkapan Wajib</label>
+                  <input type="text" id="input-kegiatan-deskripsi" required placeholder="Detail agenda dan perlengkapan..." class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                </div>
+                <div class="sm:col-span-2 lg:col-span-3 flex justify-end gap-2">
+                  <button type="button" id="btn-cancel-kegiatan" onclick="resetAdminKegiatanForm()" class="hidden px-4 py-2.5 rounded-xl bg-navy-800 border border-navy-700 text-slate-300 text-xs font-bold">Batal Edit</button>
+                  <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 text-xs font-extrabold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-paper-plane"></i> Publikasikan Kegiatan
+                  </button>
+                </div>
+              </form>
+            </div>
+            <div id="admin-kegiatan-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </section>
+        </div>
+
+        <!-- KONTEN ANGGOTA -->
+        <div id="anggota-workspace" class="hidden space-y-6">
+          <section id="member-tab-piket" class="member-panel space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div class="lg:col-span-5 bg-navy-850 border border-navy-700 rounded-2xl p-6 h-fit">
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-navy-700">
+                  <h2 class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-clipboard-check text-amber-400"></i> Form Absensi Piket
+                  </h2>
+                  <span id="member-today-pill" class="px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold">Hari Ini</span>
+                </div>
+
+                <div class="bg-navy-900 border border-navy-700 rounded-xl p-3 text-xs text-slate-300 mb-5 flex items-start gap-2.5">
+                  <i class="fa-solid fa-lock text-amber-400 mt-0.5"></i>
+                  <span>Identitas terkunci otomatis sesuai akun Anda (hanya dapat mengisi absen untuk 1 data nama sendiri).</span>
+                </div>
+
+                <form onsubmit="handleMemberSubmitPiket(event)" class="space-y-4">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Nama Anggota</label>
+                      <input type="text" id="member-locked-nama" readonly class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900/70 border border-navy-700 text-white font-bold text-xs cursor-not-allowed">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Nomor NPAM</label>
+                      <input type="text" id="member-locked-npam" readonly class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900/70 border border-navy-700 text-amber-400 font-mono font-bold text-xs cursor-not-allowed">
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Status Kehadiran</label>
+                    <div class="grid grid-cols-2 gap-3">
+                      <label class="cursor-pointer">
+                        <input type="radio" name="member-piket-status" value="Hadir" checked class="peer sr-only">
+                        <div class="p-3 rounded-xl border border-navy-700 bg-navy-900 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/15 text-center font-bold text-xs text-slate-400 peer-checked:text-emerald-300 transition flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-circle-check"></i> Hadir Piket
+                        </div>
+                      </label>
+                      <label class="cursor-pointer">
+                        <input type="radio" name="member-piket-status" value="Izin" class="peer sr-only">
+                        <div class="p-3 rounded-xl border border-navy-700 bg-navy-900 peer-checked:border-amber-500 peer-checked:bg-amber-500/15 text-center font-bold text-xs text-slate-400 peer-checked:text-amber-300 transition flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-clock"></i> Izin
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Catatan Aktivitas Piket</label>
+                    <input type="text" id="member-piket-keterangan" placeholder="Contoh: Bersih-bersih sekretariat & cek logistik" class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+                      Foto Dokumentasi Piket <span class="text-amber-400">*</span>
+                    </label>
+                    <label for="member-piket-file" class="flex flex-col items-center justify-center w-full p-4 border-2 border-dashed border-navy-700 hover:border-amber-500/60 rounded-2xl bg-navy-900/80 hover:bg-navy-800/60 cursor-pointer transition">
+                      <div id="member-photo-empty" class="text-center py-2">
+                        <div class="w-10 h-10 rounded-full bg-amber-500/15 text-amber-400 flex items-center justify-center mx-auto mb-2">
+                          <i class="fa-solid fa-camera text-base"></i>
+                        </div>
+                        <p class="text-xs font-bold text-slate-200">Unggah / Ambil Foto Dokumentasi Piket</p>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Format JPG/PNG (Kompresi otomatis)</p>
+                      </div>
+                      <div id="member-photo-preview-box" class="hidden w-full text-center">
+                        <img id="member-photo-preview-img" src="" alt="Preview Dokumentasi" class="w-full h-44 object-cover rounded-xl border border-navy-700">
+                        <span class="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 bg-navy-850 px-3 py-1.5 rounded-lg border border-navy-700">
+                          <i class="fa-solid fa-rotate"></i> Ganti Foto Dokumentasi
+                        </span>
+                      </div>
+                      <input type="file" id="member-piket-file" accept="image/*" capture="environment" onchange="handleMemberPhotoUpload(event)" class="hidden">
+                    </label>
+                  </div>
+
+                  <button type="submit" class="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 font-extrabold text-sm shadow-lg shadow-amber-500/15 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>Kirim Absensi Piket</span>
+                  </button>
+                </form>
+              </div>
+
+              <div class="lg:col-span-7 space-y-6">
+                <div class="bg-navy-850 border border-navy-700 rounded-2xl overflow-hidden">
+                  <div class="p-5 border-b border-navy-700 flex items-center justify-between">
+                    <div>
+                      <h3 class="text-base font-extrabold text-white">Riwayat Absensi Piket Anda</h3>
+                      <p class="text-xs text-slate-400 mt-0.5">Jadwal piket rutin Anda: <strong id="member-routine-days" class="text-amber-400">-</strong></p>
+                    </div>
+                    <span id="member-my-logs-badge" class="px-3 py-1 rounded-full bg-navy-900 border border-navy-700 text-xs font-bold text-slate-300">0 Catatan</span>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                      <thead>
+                        <tr class="bg-navy-900 text-slate-400 text-[11px] uppercase tracking-wider border-b border-navy-700">
+                          <th class="py-3 px-4 font-bold">Tanggal</th>
+                          <th class="py-3 px-4 font-bold">Jam</th>
+                          <th class="py-3 px-4 font-bold">Status</th>
+                          <th class="py-3 px-4 font-bold">Dokumentasi & Catatan</th>
+                        </tr>
+                      </thead>
+                      <tbody id="member-my-piket-tbody" class="divide-y divide-navy-700/70 text-sm"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5">
+                  <h3 class="text-sm font-extrabold text-white mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-week text-amber-400"></i> Jadwal Piket Mingguan Mapala MUCI
+                  </h3>
+                  <div id="member-readonly-jadwal" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="member-tab-rapat" class="member-panel hidden space-y-5">
+            <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5">
+              <h2 class="text-lg font-extrabold text-white">Sesi Absensi Rapat Mapala MUCI</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Konfirmasi kehadiran Anda pada sesi rapat yang sedang dibuka oleh Pengurus.</p>
+            </div>
+            <div id="member-rapat-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </section>
+
+          <section id="member-tab-kegiatan" class="member-panel hidden space-y-5">
+            <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5">
+              <h2 class="text-lg font-extrabold text-white flex items-center gap-2">
+                <i class="fa-solid fa-bullhorn text-amber-400"></i> Pemberitahuan & Agenda Kegiatan
+              </h2>
+              <p class="text-xs text-slate-400 mt-0.5">Informasi resmi agenda lapangan, latihan rutin, diklatsar, dan kegiatan Mapala MUCI.</p>
+            </div>
+            <div id="member-kegiatan-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL ADMIN -->
+  <div id="modal-admin-piket" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div class="bg-navy-850 border border-navy-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-navy-700">
+        <h3 id="modal-piket-heading" class="text-base font-extrabold text-white">Edit Absensi Piket</h3>
+        <button onclick="closeAdminPiketModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="handleAdminSavePiketModal(event)" class="space-y-4">
+        <input type="hidden" id="modal-piket-id">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Anggota</label>
+          <select id="modal-piket-member" required class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Tanggal</label>
+            <input type="date" id="modal-piket-date" required class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Waktu (WIB)</label>
+            <input type="time" id="modal-piket-time" required class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Status Kehadiran</label>
+          <select id="modal-piket-status" class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm font-bold text-white outline-none focus:border-amber-500">
+            <option value="Hadir">Hadir Piket</option>
+            <option value="Izin">Izin</option>
+            <option value="Alpha">Alpha</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Keterangan</label>
+          <input type="text" id="modal-piket-note" placeholder="Catatan piket..." class="w-full px-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-sm text-white outline-none focus:border-amber-500">
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeAdminPiketModal()" class="px-4 py-2 rounded-xl bg-navy-800 border border-navy-700 text-xs font-bold text-slate-300">Batal</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 text-xs font-extrabold">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-rapat-attendees" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div class="bg-navy-850 border border-navy-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[88vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-navy-700">
+        <div>
+          <h3 id="modal-rapat-title" class="text-base font-extrabold text-white">Daftar Kehadiran Rapat</h3>
+          <p id="modal-rapat-sub" class="text-xs text-slate-400">Kelola status hadir anggota</p>
+        </div>
+        <button onclick="closeRapatAttendeesModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="overflow-y-auto flex-1">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-navy-900 text-slate-400 text-[11px] uppercase border-b border-navy-700">
+              <th class="py-2.5 px-3 font-bold">Nama Anggota</th>
+              <th class="py-2.5 px-3 font-bold">NPAM</th>
+              <th class="py-2.5 px-3 font-bold">Status</th>
+              <th class="py-2.5 px-3 font-bold text-right">Ubah Status</th>
+            </tr>
+          </thead>
+          <tbody id="modal-rapat-tbody" class="divide-y divide-navy-700/70 text-sm"></tbody>
+        </table>
+      </div>
+      <div class="pt-4 mt-3 border-t border-navy-700 flex justify-end">
+        <button onclick="closeRapatAttendeesModal()" class="px-5 py-2 rounded-xl bg-amber-500 text-navy-950 text-xs font-extrabold">Selesai</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-photo-viewer" onclick="closePhotoModal()" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+    <div onclick="event.stopPropagation()" class="bg-navy-850 border border-navy-700 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl">
+      <div class="px-5 py-3.5 bg-navy-900 border-b border-navy-700 flex items-center justify-between">
+        <div>
+          <h3 id="photo-modal-title" class="text-sm font-extrabold text-white">Dokumentasi Piket</h3>
+          <p id="photo-modal-sub" class="text-[11px] text-amber-400 mt-0.5">-</p>
+        </div>
+        <button onclick="closePhotoModal()" class="text-slate-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="p-4 bg-navy-950 flex items-center justify-center">
+        <img id="photo-modal-img" src="" alt="Dokumentasi Piket" class="max-h-[70vh] w-auto rounded-xl object-contain">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const KEYS = {
+      MEMBERS: 'muci_dark_members_v1',
+      JADWAL: 'muci_dark_jadwal_v1',
+      PIKET_LOGS: 'muci_dark_piket_logs_v1',
+      RAPAT: 'muci_dark_rapat_v1',
+      KEGIATAN: 'muci_dark_kegiatan_v1',
+      SESSION: 'muci_dark_session_v1'
+    };
+
+    const HARI_LIST = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const URUTAN_HARI = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+
+    function getTodayISO() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
+
+    function getTodayDayName() {
+      return HARI_LIST[new Date().getDay()];
+    }
+
+    function getDayNameFromISO(iso) {
+      if (!iso) return '';
+      const [y, m, d] = iso.split('-').map(Number);
+      return HARI_LIST[new Date(y, m - 1, d).getDay()];
+    }
+
+    function formatDateIndo(iso) {
+      if (!iso) return '-';
+      const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      const [y, m, d] = iso.split('-').map(Number);
+      return `${d} ${bulan[m - 1]} ${y}`;
+    }
+
+    function getCurrentHHMM() {
+      const now = new Date();
+      return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function seedInitialData(force = false) {
+      if (force || !localStorage.getItem(KEYS.MEMBERS)) {
+        const members = [
+          { id: 'm01', nama: 'Azzifa Mutia Rahman', username: 'azzifa.muci', npam: 'MUCI-103', divisi: 'Gunung Hutan' },
+          { id: 'm02', nama: 'Kiki Aninda', username: 'kiki.muci', npam: 'MUCI-102', divisi: 'Konservasi' },
+          { id: 'm03', nama: 'Anggien Tirtha Dahani', username: 'anggien.muci', npam: 'MUCI-101', divisi: 'Rock Climbing' },
+          { id: 'm04', nama: 'Cahyani Agustin', username: 'cahyani.muci', npam: 'MUCI-106', divisi: 'Lingkungan Hidup & Pengurus' },
+          { id: 'm05', nama: 'Zakkariyah Khoiri', username: 'zakkariyah.muci', npam: 'MUCI-100', divisi: 'Gunung Hutan' },
+          { id: 'm06', nama: 'Chaska D Azzuri', username: 'chaska.muci', npam: 'MUCI-097', divisi: 'Caving' },
+          { id: 'm07', nama: 'Ahmad Ferdiansyah', username: 'ahmad.muci', npam: 'MUCI-099', divisi: 'Rock Climbing' },
+          { id: 'm08', nama: 'Raka Pratama', username: 'raka.muci', npam: 'MUCI-104', divisi: 'Gunung Hutan' },
+          { id: 'm09', nama: 'Nadia Putri Lestari', username: 'nadia.muci', npam: 'MUCI-105', divisi: 'Konservasi' },
+          { id: 'm10', nama: 'Bagas Setiawan', username: 'bagas.muci', npam: 'MUCI-107', divisi: 'Caving' },
+          { id: 'm11', nama: 'Dinda Maharani', username: 'dinda.muci', npam: 'MUCI-108', divisi: 'Lingkungan Hidup & Pengurus' },
+          { id: 'm12', nama: 'Fajar Ramadhan', username: 'fajar.muci', npam: 'MUCI-109', divisi: 'Gunung Hutan' },
+          { id: 'm13', nama: 'Reza Pahlevi', username: 'reza.muci', npam: 'MUCI-110', divisi: 'Rock Climbing' },
+          { id: 'm14', nama: 'Siti Nurhaliza', username: 'siti.muci', npam: 'MUCI-111', divisi: 'Konservasi' },
+          { id: 'm15', nama: 'Ilham Maulana', username: 'ilham.muci', npam: 'MUCI-112', divisi: 'Caving' },
+          { id: 'm16', nama: 'Tiara Kusuma', username: 'tiara.muci', npam: 'MUCI-113', divisi: 'Lingkungan Hidup & Pengurus' },
+          { id: 'm17', nama: 'Dimas Saputra', username: 'dimas.muci', npam: 'MUCI-114', divisi: 'Gunung Hutan' },
+          { id: 'm18', nama: 'Aulia Rahma', username: 'aulia.muci', npam: 'MUCI-115', divisi: 'Konservasi' },
+          { id: 'm19', nama: 'Gilang Ramadhan', username: 'gilang.muci', npam: 'MUCI-116', divisi: 'Rock Climbing' },
+          { id: 'm20', nama: 'Putri Wulandari', username: 'putri.muci', npam: 'MUCI-117', divisi: 'Caving' },
+          { id: 'm21', nama: 'Hendra Wijaya', username: 'hendra.muci', npam: 'MUCI-118', divisi: 'Gunung Hutan' },
+          { id: 'm22', nama: 'Nisa Fitriani', username: 'nisa.muci', npam: 'MUCI-119', divisi: 'Lingkungan Hidup & Pengurus' },
+          { id: 'm23', nama: 'Arif Budiman', username: 'arif.muci', npam: 'MUCI-120', divisi: 'Rock Climbing' }
+        ];
+        localStorage.setItem(KEYS.MEMBERS, JSON.stringify(members));
+      }
+
+      if (force || !localStorage.getItem(KEYS.JADWAL)) {
+        const allIds = ['m01', 'm02', 'm03', 'm04', 'm05', 'm06', 'm07', 'm08', 'm09', 'm10', 'm11', 'm12', 'm13', 'm14', 'm15', 'm16', 'm17', 'm18', 'm19', 'm20', 'm21', 'm22', 'm23'];
+        const todayName = getTodayDayName();
+        const jadwal = {
+          'Senin': ['m01', 'm02', 'm08', 'm14'],
+          'Selasa': ['m03', 'm09', 'm15', 'm19'],
+          'Rabu': ['m04', 'm10', 'm16', 'm20'],
+          'Kamis': ['m05', 'm11', 'm17', 'm21'],
+          'Jumat': ['m01', 'm02', 'm03', 'm04', 'm05', 'm06', 'm07', 'm08', 'm09', 'm10', 'm11', 'm12', 'm13', 'm14', 'm15', 'm16', 'm17', 'm18', 'm19', 'm20', 'm21', 'm22', 'm23'],
+          'Sabtu': ['m06', 'm12', 'm18', 'm22'],
+          'Minggu': ['m07', 'm13', 'm23']
+        };
+        jadwal[todayName] = allIds;
+        localStorage.setItem(KEYS.JADWAL, JSON.stringify(jadwal));
+      }
+
+      if (force || !localStorage.getItem(KEYS.PIKET_LOGS)) {
+        localStorage.setItem(KEYS.PIKET_LOGS, JSON.stringify([]));
+      }
+
+      if (force || !localStorage.getItem(KEYS.RAPAT)) {
+        localStorage.setItem(KEYS.RAPAT, JSON.stringify([]));
+      }
+
+      if (force || !localStorage.getItem(KEYS.KEGIATAN)) {
+        const kegiatan = [
+          {
+            id: 'keg01',
+            judul: 'Latihan Fisik & Navigasi Darat',
+            kategori: 'Latihan Rutin',
+            tanggal: '2026-11-18',
+            lokasi: 'Kampus 2 UMC & Bukit Gronggong',
+            deskripsi: 'Wajib membawa kompas bidik, peta topografi, dan air minum 1.5L.'
+          }
+        ];
+        localStorage.setItem(KEYS.KEGIATAN, JSON.stringify(kegiatan));
+      }
+    }
+
+    const getMembers = () => JSON.parse(localStorage.getItem(KEYS.MEMBERS) || '[]');
+    const saveMembers = (data) => localStorage.setItem(KEYS.MEMBERS, JSON.stringify(data));
+    const getJadwal = () => JSON.parse(localStorage.getItem(KEYS.JADWAL) || '{}');
+    const saveJadwal = (data) => localStorage.setItem(KEYS.JADWAL, JSON.stringify(data));
+    const getPiketLogs = () => JSON.parse(localStorage.getItem(KEYS.PIKET_LOGS) || '[]');
+    const savePiketLogs = (data) => localStorage.setItem(KEYS.PIKET_LOGS, JSON.stringify(data));
+    const getRapatList = () => JSON.parse(localStorage.getItem(KEYS.RAPAT) || '[]');
+    const saveRapatList = (data) => localStorage.setItem(KEYS.RAPAT, JSON.stringify(data));
+    const getKegiatanList = () => JSON.parse(localStorage.getItem(KEYS.KEGIATAN) || '[]');
+    const saveKegiatanList = (data) => localStorage.setItem(KEYS.KEGIATAN, JSON.stringify(data));
+    const getSession = () => JSON.parse(localStorage.getItem(KEYS.SESSION) || 'null');
+
+    function updateLiveClock() {
+      const now = new Date();
+      const hari = HARI_LIST[now.getDay()];
+      const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      const dateStr = `${hari}, ${now.getDate()} ${bulan[now.getMonth()]} ${now.getFullYear()}`;
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')} WIB`;
+
+      const dateEl = document.getElementById('live-date-text');
+      const timeEl = document.getElementById('live-time-text');
+      if (dateEl) dateEl.textContent = dateStr;
+      if (timeEl) timeEl.textContent = timeStr;
+    }
+
+    function showToast(msg, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const styles = {
+        success: 'bg-navy-850 border-emerald-500/50 text-emerald-300',
+        error: 'bg-navy-850 border-red-500/50 text-red-300',
+        info: 'bg-navy-850 border-amber-500/50 text-amber-300'
+      };
+      const icons = {
+        success: 'fa-circle-check text-emerald-400',
+        error: 'fa-circle-exclamation text-red-400',
+        info: 'fa-circle-info text-amber-400'
+      };
+
+      const toast = document.createElement('div');
+      toast.className = `pointer-events-auto border ${styles[type] || styles.info} rounded-2xl p-3.5 shadow-2xl flex items-center gap-3 text-xs font-semibold transition-all duration-300 translate-y-2 opacity-0`;
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info} text-base shrink-0"></i><span class="flex-1 text-slate-100 leading-relaxed">${msg}</span>`;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-4');
+        setTimeout(() => toast.remove(), 300);
+      }, 3400);
+    }
+
+    function openConfirmModal(title, message, onConfirm) {
+      const modal = document.getElementById('confirm-modal');
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-message').textContent = message;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      const okBtn = document.getElementById('confirm-ok-btn');
+      const cancelBtn = document.getElementById('confirm-cancel-btn');
+      const close = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      };
+      okBtn.onclick = () => { close(); onConfirm(); };
+      cancelBtn.onclick = close;
+    }
+
+    function switchLoginTab(tab) {
+      const tabAnggota = document.getElementById('tab-login-anggota');
+      const tabAdmin = document.getElementById('tab-login-admin');
+      const formAnggota = document.getElementById('form-login-anggota');
+      const formAdmin = document.getElementById('form-login-admin');
+
+      if (tab === 'anggota') {
+        tabAnggota.className = 'py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 bg-navy-750 text-amber-400 border border-navy-700 shadow';
+        tabAdmin.className = 'py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200';
+        formAnggota.classList.remove('hidden');
+        formAdmin.classList.add('hidden');
+      } else {
+        tabAdmin.className = 'py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 bg-navy-750 text-amber-400 border border-navy-700 shadow';
+        tabAnggota.className = 'py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200';
+        formAdmin.classList.remove('hidden');
+        formAnggota.classList.add('hidden');
+      }
+    }
+
+    function togglePass(id, btn) {
+      const input = document.getElementById(id);
+      const icon = btn.querySelector('i');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    }
+
+    function handleLoginAdmin(e) {
+      e.preventDefault();
+      const user = document.getElementById('login-admin-user').value.trim();
+      const pass = document.getElementById('login-admin-pass').value;
+
+      if (user === 'admin muci' && pass === 'ulukauhuy_') {
+        localStorage.setItem(KEYS.SESSION, JSON.stringify({ role: 'admin', nama: 'Admin MUCI' }));
+        showToast('Selamat datang di Dashboard Admin Mapala MUCI!', 'success');
+        initWorkspace();
+      } else {
+        showToast('Username atau Password Admin tidak valid!', 'error');
+      }
+    }
+
+    function handleLoginAnggota(e) {
+      e.preventDefault();
+      const user = document.getElementById('login-anggota-user').value.trim().toLowerCase();
+      const pass = document.getElementById('login-anggota-pass').value.trim().toUpperCase();
+
+      const members = getMembers();
+      const found = members.find(m =>
+        (m.username && m.username.trim().toLowerCase() === user) &&
+        m.npam.trim().toUpperCase() === pass
+      );
+
+      if (found) {
+        localStorage.setItem(KEYS.SESSION, JSON.stringify({
+          role: 'anggota',
+          memberId: found.id,
+          nama: found.nama,
+          npam: found.npam,
+          divisi: found.divisi
+        }));
+        showToast(`Berhasil login sebagai ${found.nama}`, 'success');
+        initWorkspace();
+      } else {
+        showToast('Username Anggota atau Password (NPAM) salah!', 'error');
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem(KEYS.SESSION);
+      document.getElementById('dashboard-view').classList.add('hidden');
+      document.getElementById('login-view').classList.remove('hidden');
+      document.getElementById('login-admin-user').value = '';
+      document.getElementById('login-admin-pass').value = '';
+      document.getElementById('login-anggota-user').value = '';
+      document.getElementById('login-anggota-pass').value = '';
+      toggleMobileSidebar(false);
+      showToast('Anda telah keluar dari sistem.', 'info');
+    }
+
+    function toggleMobileSidebar(open) {
+      const sidebar = document.getElementById('app-sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (open) {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
+
+    let activeAdminMenu = 'ringkasan';
+    let activeMemberMenu = 'piket';
+
+    function initWorkspace() {
+      const session = getSession();
+      if (!session) {
+        document.getElementById('login-view').classList.remove('hidden');
+        document.getElementById('dashboard-view').classList.add('hidden');
+        return;
+      }
+
+      document.getElementById('login-view').classList.add('hidden');
+      document.getElementById('dashboard-view').classList.remove('hidden');
+
+      if (session.role === 'admin') {
+        document.getElementById('sidebar-mode-text').textContent = 'Admin Mode';
+        document.getElementById('sidebar-member-card').classList.add('hidden');
+        document.getElementById('sidebar-admin-actions').classList.remove('hidden');
+        document.getElementById('admin-workspace').classList.remove('hidden');
+        document.getElementById('anggota-workspace').classList.add('hidden');
+        switchAdminMenu(activeAdminMenu);
+      } else {
+        const latestMember = getMembers().find(m => m.id === session.memberId) || session;
+        document.getElementById('sidebar-mode-text').textContent = 'Anggota Mode';
+        document.getElementById('sidebar-member-card').classList.remove('hidden');
+        document.getElementById('sidebar-member-name').textContent = latestMember.nama;
+        document.getElementById('sidebar-member-npam').textContent = latestMember.npam;
+        document.getElementById('sidebar-admin-actions').classList.add('hidden');
+        document.getElementById('admin-workspace').classList.add('hidden');
+        document.getElementById('anggota-workspace').classList.remove('hidden');
+        switchMemberMenu(activeMemberMenu);
+      }
+    }
+
+    function renderAdminSidebar() {
+      const members = getMembers();
+      const logs = getPiketLogs();
+      const rapats = getRapatList();
+      const openRapatCount = rapats.filter(r => r.status === 'Dibuka').length;
+      const kegiatans = getKegiatanList();
+      const divisiSet = new Set(members.map(m => m.divisi));
+
+      const menus = [
+        { id: 'ringkasan', label: 'Ringkasan & Aksi Cepat', icon: 'fa-chart-pie', badge: null },
+        { id: 'jadwal', label: 'Edit Jadwal Piket', icon: 'fa-calendar-days', badge: '7 Hari', badgeStyle: 'bg-navy-800 text-slate-300 border-navy-700' },
+        { id: 'absen-piket', label: 'Edit Absen Piket', icon: 'fa-clipboard-check', badge: String(logs.length), badgeStyle: 'bg-navy-800 text-slate-300 border-navy-700' },
+        { id: 'rapat', label: 'Absen Rapat', icon: 'fa-handshake', badge: `${openRapatCount}/${rapats.length}`, badgeStyle: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' },
+        { id: 'anggota', label: 'Data Anggota', icon: 'fa-users', badge: String(members.length), badgeStyle: 'bg-navy-800 text-slate-300 border-navy-700' },
+        { id: 'divisi', label: 'Divisi & Anggota', icon: 'fa-sitemap', badge: String(divisiSet.size), badgeStyle: 'bg-navy-800 text-slate-300 border-navy-700' },
+        { id: 'kegiatan', label: 'Jadwal Kegiatan', icon: 'fa-bullhorn', badge: String(kegiatans.length), badgeStyle: 'bg-navy-800 text-slate-300 border-navy-700' }
+      ];
+
+      document.getElementById('sidebar-nav-list').innerHTML = menus.map(m => {
+        const isActive = activeAdminMenu === m.id;
+        return `
+          <button onclick="switchAdminMenu('${m.id}')" class="w-full py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 ${isActive ? 'sidebar-item-active' : 'sidebar-item-inactive'}">
+            <span class="flex items-center gap-3 truncate">
+              <i class="fa-solid ${m.icon} w-4 text-center ${isActive ? 'text-amber-400' : 'text-slate-400'}"></i>
+              <span class="truncate">${m.label}</span>
+            </span>
+            ${m.badge !== null ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${m.badgeStyle}">${m.badge}</span>` : ''}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function switchAdminMenu(menuId) {
+      activeAdminMenu = menuId;
+      toggleMobileSidebar(false);
+      renderAdminSidebar();
+
+      document.querySelectorAll('.admin-panel').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById(`admin-tab-${menuId}`);
+      if (target) target.classList.remove('hidden');
+
+      const headers = {
+        'ringkasan': ['Ringkasan & Monitoring Absensi', 'Pantau aktivitas piket sekretariat, kehadiran rapat, dan agenda Mapala MUCI.'],
+        'jadwal': ['Edit Jadwal Piket Sekretariat', 'Atur pembagian anggota piket harian dari Senin hingga Minggu.'],
+        'absen-piket': ['Edit Absen Piket & Dokumentasi', 'Verifikasi foto dokumentasi piket, ubah status hadir, atau hapus riwayat absen.'],
+        'rapat': ['Manajemen Absensi Rapat', 'Buat sesi absen rapat baru, buka/tutup absensi, dan kelola daftar hadir anggota.'],
+        'anggota': ['Data Anggota & Kredensial Login', 'Tambah atau ubah Nama, Username Login, NPAM, dan Divisi anggota Mapala MUCI.'],
+        'divisi': ['Divisi & Keanggotaan', 'Distribusi anggota aktif Mapala MUCI berdasarkan divisi operasional.'],
+        'kegiatan': ['Jadwal & Pemberitahuan Kegiatan', 'Kelola agenda lapangan, diklatsar, dan pengumuman resmi untuk seluruh anggota.']
+      };
+
+      const [title, sub] = headers[menuId] || headers['ringkasan'];
+      document.getElementById('page-header-title').textContent = title;
+      document.getElementById('page-header-subtitle').textContent = sub;
+
+      refreshAdminData();
+    }
+
+    function refreshAdminData() {
+      renderAdminSidebar();
+      renderAdminOverview();
+      renderAdminJadwalSection();
+      renderAdminPiketTable();
+      renderAdminRapatSection();
+      renderAdminMembersTable();
+      renderAdminDivisiSection();
+      renderAdminKegiatanSection();
+    }
+
+    function renderAdminOverview() {
+      const members = getMembers();
+      const jadwal = getJadwal();
+      const logs = getPiketLogs();
+      const rapats = getRapatList();
+
+      const todayISO = getTodayISO();
+      const todayDay = getTodayDayName();
+      const todayMemberIds = jadwal[todayDay] || [];
+
+      document.getElementById('stat-admin-members').textContent = members.length;
+      document.getElementById('stat-admin-today-piket').textContent = todayMemberIds.length;
+      document.getElementById('stat-admin-logs').textContent = logs.length;
+      document.getElementById('stat-admin-rapat').textContent = rapats.filter(r => r.status === 'Dibuka').length;
+      document.getElementById('overview-today-dayname').textContent = todayDay;
+
+      const listContainer = document.getElementById('overview-today-piket-list');
+      if (todayMemberIds.length === 0) {
+        listContainer.innerHTML = `<div class="p-6 rounded-xl bg-navy-900 border border-navy-700 text-center text-xs text-slate-400">Belum ada petugas piket dijadwalkan pada hari ${todayDay}.</div>`;
+      } else {
+        listContainer.innerHTML = todayMemberIds.map(mId => {
+          const member = members.find(m => m.id === mId);
+          if (!member) return '';
+          const todayLog = logs.find(l => l.memberId === mId && l.tanggal === todayISO);
+
+          const actionBadge = todayLog
+            ? (todayLog.status === 'Hadir'
+              ? `<span class="px-3.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-xs font-bold inline-flex items-center gap-1.5"><i class="fa-solid fa-check"></i> Hadir Piket (${todayLog.jam})</span>`
+              : `<span class="px-3.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/35 text-amber-300 text-xs font-bold inline-flex items-center gap-1.5">${todayLog.status} (${todayLog.jam})</span>`)
+            : `<button onclick="quickMarkPiketHadir('${member.id}')" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 text-xs font-extrabold shadow-sm transition inline-flex items-center gap-1.5"><i class="fa-solid fa-check"></i> Tandai Hadir</button>`;
+
+          return `
+            <div class="p-3.5 rounded-xl bg-navy-900/90 border border-navy-700 hover:border-navy-600 transition flex items-center justify-between gap-3">
+              <div>
+                <div class="text-sm font-bold text-white">${member.nama}</div>
+                <div class="text-[11px] font-mono text-slate-400 mt-0.5">${member.npam}</div>
+              </div>
+              <div class="shrink-0">${actionBadge}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const rapatBox = document.getElementById('overview-rapat-status-box');
+      if (rapats.length === 0) {
+        rapatBox.innerHTML = `<div class="py-12 text-center text-xs italic text-slate-400">Belum ada jadwal rapat dibuat.</div>`;
+      } else {
+        const sortedRapats = [...rapats].reverse().slice(0, 3);
+        rapatBox.innerHTML = `<div class="space-y-3">` + sortedRapats.map(r => {
+          const isOpen = r.status === 'Dibuka';
+          return `
+            <div class="p-4 rounded-xl bg-navy-900 border border-navy-700">
+              <div class="flex items-start justify-between gap-2">
+                <h4 class="text-sm font-bold text-white">${r.judul}</h4>
+                <span class="px-2.5 py-1 rounded-full ${isOpen ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : 'bg-slate-700/40 text-slate-400'} text-[10px] font-bold">${r.status}</span>
+              </div>
+              <div class="text-[11px] text-slate-400 mt-1.5 space-y-0.5">
+                <div><i class="fa-regular fa-calendar text-amber-400 mr-1.5"></i>${formatDateIndo(r.tanggal)} • ${r.waktu} WIB</div>
+                <div><i class="fa-solid fa-location-dot text-amber-400 mr-1.5"></i>${r.lokasi}</div>
+              </div>
+              <div class="mt-3 pt-2.5 border-t border-navy-700/70 flex items-center justify-between text-xs">
+                <span class="text-slate-300 font-semibold">${(r.attendees || []).length} Anggota Hadir</span>
+                <button onclick="switchAdminMenu('rapat')" class="text-amber-400 hover:underline font-bold">Detail &rarr;</button>
+              </div>
+            </div>
+          `;
+        }).join('') + `</div>`;
+      }
+    }
+
+    function quickMarkPiketHadir(memberId) {
+      const member = getMembers().find(m => m.id === memberId);
+      if (!member) return;
+
+      const logs = getPiketLogs();
+      const todayISO = getTodayISO();
+      if (logs.some(l => l.memberId === memberId && l.tanggal === todayISO)) {
+        showToast(`${member.nama} sudah tercatat absen hari ini.`, 'info');
+        return;
+      }
+
+      logs.unshift({
+        id: 'log_' + Date.now(),
+        memberId: member.id,
+        nama: member.nama,
+        npam: member.npam,
+        tanggal: todayISO,
+        jam: getCurrentHHMM(),
+        status: 'Hadir',
+        keterangan: 'Ditandai hadir oleh Admin',
+        foto: ''
+      });
+
+      savePiketLogs(logs);
+      showToast(`${member.nama} berhasil ditandai Hadir Piket!`, 'success');
+      refreshAdminData();
+    }
+
+    function renderAdminJadwalSection() {
+      const members = getMembers();
+      const jadwal = getJadwal();
+      const todayDay = getTodayDayName();
+
+      document.getElementById('admin-jadwal-member').innerHTML = members.map(m => `<option value="${m.id}">${m.nama} (${m.npam})</option>`).join('');
+
+      document.getElementById('admin-jadwal-cards').innerHTML = URUTAN_HARI.map(hari => {
+        const ids = jadwal[hari] || [];
+        const isToday = hari === todayDay;
+
+        const memberItems = ids.length === 0
+          ? `<p class="text-xs italic text-slate-500 py-2">Belum ada anggota terjadwal</p>`
+          : ids.map(id => {
+              const m = members.find(item => item.id === id);
+              if (!m) return '';
+              return `
+                <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-navy-900 border border-navy-700/80 text-xs">
+                  <div class="truncate">
+                    <span class="font-bold text-slate-200">${m.nama}</span>
+                    <span class="text-[10px] font-mono text-slate-400 ml-1.5">${m.npam}</span>
+                  </div>
+                  <button onclick="removeMemberFromJadwal('${hari}', '${m.id}')" class="text-slate-500 hover:text-red-400 p-1 transition" title="Hapus"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+              `;
+            }).join('');
+
+        return `
+          <div class="bg-navy-850 border ${isToday ? 'border-amber-500/60' : 'border-navy-700'} rounded-2xl p-4 flex flex-col">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-navy-700">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-extrabold text-white">${hari}</span>
+                ${isToday ? '<span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold">Hari Ini</span>' : ''}
+              </div>
+              <span class="text-[11px] font-bold text-slate-400">${ids.length} orang</span>
+            </div>
+            <div class="space-y-2 max-h-60 overflow-y-auto pr-1">${memberItems}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleAdminAddJadwal(e) {
+      e.preventDefault();
+      const hari = document.getElementById('admin-jadwal-day').value;
+      const memberId = document.getElementById('admin-jadwal-member').value;
+      if (!memberId) return;
+
+      const jadwal = getJadwal();
+      if (!jadwal[hari]) jadwal[hari] = [];
+      if (jadwal[hari].includes(memberId)) {
+        showToast('Anggota sudah terjadwal di hari tersebut.', 'info');
+        return;
+      }
+
+      jadwal[hari].push(memberId);
+      saveJadwal(jadwal);
+      showToast(`Petugas piket hari ${hari} diperbarui`, 'success');
+      refreshAdminData();
+    }
+
+    function removeMemberFromJadwal(hari, memberId) {
+      const jadwal = getJadwal();
+      jadwal[hari] = (jadwal[hari] || []).filter(id => id !== memberId);
+      saveJadwal(jadwal);
+      showToast('Anggota dihapus dari jadwal.', 'info');
+      refreshAdminData();
+    }
+
+    function renderAdminPiketTable() {
+      const filterDate = document.getElementById('admin-filter-piket-date')?.value || '';
+      let logs = getPiketLogs();
+      if (filterDate) logs = logs.filter(l => l.tanggal === filterDate);
+
+      const tbody = document.getElementById('admin-piket-tbody');
+      if (logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-xs text-slate-400">Belum ada riwayat absensi piket.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = logs.map(log => {
+        const fotoBtn = log.foto
+          ? `<button onclick="openPhotoModal('${log.id}')" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/35 text-indigo-300 text-[11px] font-bold mb-1 transition"><i class="fa-solid fa-image"></i> Lihat Foto</button>`
+          : `<span class="inline-block text-[11px] text-slate-500 italic mb-0.5">Tidak ada foto</span>`;
+
+        return `
+          <tr class="hover:bg-navy-800/40 transition">
+            <td class="py-3.5 px-4"><div class="font-bold text-white text-xs">${formatDateIndo(log.tanggal)}</div><div class="text-[11px] text-slate-400">${getDayNameFromISO(log.tanggal)}</div></td>
+            <td class="py-3.5 px-4"><div class="font-bold text-white text-xs sm:text-sm">${log.nama}</div><div class="text-[11px] font-mono text-amber-400">${log.npam}</div></td>
+            <td class="py-3.5 px-4 text-xs font-mono text-slate-300">${log.jam} WIB</td>
+            <td class="py-3.5 px-4">
+              <select onchange="quickChangePiketStatus('${log.id}', this.value)" class="px-2.5 py-1 rounded-xl text-xs font-bold border bg-navy-900 cursor-pointer outline-none">
+                <option value="Hadir" ${log.status === 'Hadir' ? 'selected' : ''}>Hadir Piket</option>
+                <option value="Izin" ${log.status === 'Izin' ? 'selected' : ''}>Izin</option>
+                <option value="Alpha" ${log.status === 'Alpha' ? 'selected' : ''}>Alpha</option>
+              </select>
+            </td>
+            <td class="py-3.5 px-4 text-xs max-w-xs"><div>${fotoBtn}</div><p class="text-slate-300 truncate">${log.keterangan || '-'}</p></td>
+            <td class="py-3.5 px-4 text-right whitespace-nowrap">
+              <button onclick="openAdminPiketModal('${log.id}')" class="px-2.5 py-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 border border-navy-700 text-amber-400 text-xs font-bold mr-1 transition"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="deleteAdminPiketLog('${log.id}')" class="px-2.5 py-1.5 rounded-lg bg-red-950/70 hover:bg-red-900 border border-red-800/60 text-red-300 text-xs font-bold transition"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function quickChangePiketStatus(id, status) {
+      const logs = getPiketLogs().map(l => l.id === id ? { ...l, status } : l);
+      savePiketLogs(logs);
+      showToast(`Status kehadiran diubah ke ${status}`, 'success');
+      refreshAdminData();
+    }
+
+    function openAdminPiketModal(editId = '') {
+      const members = getMembers();
+      document.getElementById('modal-piket-member').innerHTML = members.map(m => `<option value="${m.id}">${m.nama} (${m.npam})</option>`).join('');
+      const modal = document.getElementById('modal-admin-piket');
+      if (editId) {
+        const log = getPiketLogs().find(l => l.id === editId);
+        if (!log) return;
+        document.getElementById('modal-piket-heading').textContent = 'Edit Riwayat Absen Piket';
+        document.getElementById('modal-piket-id').value = log.id;
+        document.getElementById('modal-piket-member').value = log.memberId;
+        document.getElementById('modal-piket-date').value = log.tanggal;
+        document.getElementById('modal-piket-time').value = log.jam;
+        document.getElementById('modal-piket-status').value = log.status;
+        document.getElementById('modal-piket-note').value = log.keterangan || '';
+      } else {
+        document.getElementById('modal-piket-heading').textContent = 'Tambah Absen Piket Manual';
+        document.getElementById('modal-piket-id').value = '';
+        document.getElementById('modal-piket-date').value = getTodayISO();
+        document.getElementById('modal-piket-time').value = getCurrentHHMM();
+        document.getElementById('modal-piket-status').value = 'Hadir';
+        document.getElementById('modal-piket-note').value = '';
+      }
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeAdminPiketModal() {
+      document.getElementById('modal-admin-piket').classList.add('hidden');
+      document.getElementById('modal-admin-piket').classList.remove('flex');
+    }
+
+    function handleAdminSavePiketModal(e) {
+      e.preventDefault();
+      const editId = document.getElementById('modal-piket-id').value;
+      const memberId = document.getElementById('modal-piket-member').value;
+      const tanggal = document.getElementById('modal-piket-date').value;
+      const jam = document.getElementById('modal-piket-time').value;
+      const status = document.getElementById('modal-piket-status').value;
+      const keterangan = document.getElementById('modal-piket-note').value.trim();
+
+      const member = getMembers().find(m => m.id === memberId);
+      if (!member) return;
+
+      let logs = getPiketLogs();
+      if (editId) {
+        logs = logs.map(l => l.id === editId ? { ...l, memberId: member.id, nama: member.nama, npam: member.npam, tanggal, jam, status, keterangan } : l);
+      } else {
+        logs.unshift({ id: 'log_' + Date.now(), memberId: member.id, nama: member.nama, npam: member.npam, tanggal, jam, status, keterangan: keterangan || 'Admin', foto: '' });
+      }
+      savePiketLogs(logs);
+      closeAdminPiketModal();
+      showToast('Data absen piket disimpan.', 'success');
+      refreshAdminData();
+    }
+
+    function deleteAdminPiketLog(id) {
+      openConfirmModal('Hapus Absen Piket?', 'Riwayat ini akan dihapus.', () => {
+        savePiketLogs(getPiketLogs().filter(l => l.id !== id));
+        showToast('Riwayat dihapus.', 'info');
+        refreshAdminData();
+      });
+    }
+
+    function handleAdminCreateRapat(e) {
+      e.preventDefault();
+      const judul = document.getElementById('input-rapat-judul').value.trim();
+      const tanggal = document.getElementById('input-rapat-tanggal').value;
+      const waktu = document.getElementById('input-rapat-waktu').value;
+      const lokasi = document.getElementById('input-rapat-lokasi').value.trim();
+      const status = document.getElementById('input-rapat-status').value;
+
+      const rapats = getRapatList();
+      rapats.unshift({ id: 'rapat_' + Date.now(), judul, tanggal, waktu, lokasi, status, attendees: [] });
+      saveRapatList(rapats);
+      e.target.reset();
+      document.getElementById('input-rapat-waktu').value = '19:30';
+      showToast('Sesi rapat berhasil dibuat!', 'success');
+      refreshAdminData();
+    }
+
+    function renderAdminRapatSection() {
+      const rapats = getRapatList();
+      const totalMembers = getMembers().length;
+      const container = document.getElementById('admin-rapat-container');
+
+      if (rapats.length === 0) {
+        container.innerHTML = `<div class="bg-navy-850 border border-navy-700 rounded-2xl p-8 text-center text-xs text-slate-400">Belum ada sesi rapat dibuat.</div>`;
+        return;
+      }
+
+      container.innerHTML = rapats.map(r => {
+        const isOpen = r.status === 'Dibuka';
+        return `
+          <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <div class="flex flex-wrap items-center gap-2.5">
+                <h3 class="text-base font-extrabold text-white">${r.judul}</h3>
+                <span class="px-3 py-1 rounded-full ${isOpen ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35' : 'bg-slate-700/40 text-slate-400'} text-xs font-bold">${r.status}</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-4 text-xs text-slate-400 mt-2">
+                <span><i class="fa-regular fa-calendar text-amber-400 mr-1.5"></i>${formatDateIndo(r.tanggal)}</span>
+                <span><i class="fa-regular fa-clock text-amber-400 mr-1.5"></i>${r.waktu} WIB</span>
+                <span><i class="fa-solid fa-location-dot text-amber-400 mr-1.5"></i>${r.lokasi}</span>
+                <span class="text-emerald-300 font-bold"><i class="fa-solid fa-users mr-1.5"></i>${(r.attendees || []).length} / ${totalMembers} Hadir</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="toggleRapatStatus('${r.id}')" class="px-3.5 py-2 rounded-xl bg-navy-800 hover:bg-navy-750 border border-navy-700 text-xs font-bold text-slate-200 transition">${isOpen ? 'Tutup Sesi' : 'Buka Sesi'}</button>
+              <button onclick="openRapatAttendeesModal('${r.id}')" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 text-xs font-extrabold transition"><i class="fa-solid fa-list-check mr-1"></i> Kehadiran</button>
+              <button onclick="deleteRapat('${r.id}')" class="px-3 py-2 rounded-xl bg-red-950/70 hover:bg-red-900 border border-red-800/60 text-red-300 text-xs font-bold transition"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleRapatStatus(id) {
+      const rapats = getRapatList().map(r => r.id === id ? { ...r, status: r.status === 'Dibuka' ? 'Ditutup' : 'Dibuka' } : r);
+      saveRapatList(rapats);
+      showToast('Status rapat diperbarui.', 'info');
+      refreshAdminData();
+    }
+
+    function deleteRapat(id) {
+      openConfirmModal('Hapus Sesi Rapat?', 'Data rapat akan dihapus.', () => {
+        saveRapatList(getRapatList().filter(r => r.id !== id));
+        showToast('Rapat dihapus.', 'info');
+        refreshAdminData();
+      });
+    }
+
+    let currentManagingRapatId = '';
+    function openRapatAttendeesModal(rapatId) {
+      currentManagingRapatId = rapatId;
+      const rapat = getRapatList().find(r => r.id === rapatId);
+      if (!rapat) return;
+      document.getElementById('modal-rapat-title').textContent = rapat.judul;
+      document.getElementById('modal-rapat-sub').textContent = `${formatDateIndo(rapat.tanggal)} • ${rapat.waktu} WIB`;
+      renderRapatAttendeesRows();
+      document.getElementById('modal-rapat-attendees').classList.remove('hidden');
+      document.getElementById('modal-rapat-attendees').classList.add('flex');
+    }
+
+    function renderRapatAttendeesRows() {
+      const rapat = getRapatList().find(r => r.id === currentManagingRapatId);
+      if (!rapat) return;
+      const members = getMembers();
+      const attendees = rapat.attendees || [];
+      document.getElementById('modal-rapat-tbody').innerHTML = members.map(m => {
+        const present = attendees.find(a => a.memberId === m.id);
+        return `
+          <tr>
+            <td class="py-2.5 px-3 font-bold text-white text-xs">${m.nama}</td>
+            <td class="py-2.5 px-3 font-mono text-xs text-slate-400">${m.npam}</td>
+            <td class="py-2.5 px-3">${present ? `<span class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[11px] font-bold">Hadir (${present.jam})</span>` : `<span class="text-slate-500 text-[11px]">Belum</span>`}</td>
+            <td class="py-2.5 px-3 text-right"><button onclick="adminToggleMemberRapat('${m.id}')" class="px-3 py-1 rounded-lg text-xs font-bold transition ${present ? 'bg-red-950/70 text-red-300 border border-red-800/50' : 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30'}">${present ? 'Batalkan' : 'Tandai Hadir'}</button></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function adminToggleMemberRapat(memberId) {
+      const rapats = getRapatList().map(r => {
+        if (r.id !== currentManagingRapatId) return r;
+        const exists = (r.attendees || []).some(a => a.memberId === memberId);
+        const attendees = exists ? r.attendees.filter(a => a.memberId !== memberId) : [...(r.attendees || []), { memberId, jam: getCurrentHHMM() }];
+        return { ...r, attendees };
+      });
+      saveRapatList(rapats);
+      renderRapatAttendeesRows();
+      refreshAdminData();
+    }
+
+    function closeRapatAttendeesModal() {
+      document.getElementById('modal-rapat-attendees').classList.add('hidden');
+      document.getElementById('modal-rapat-attendees').classList.remove('flex');
+    }
+
+    function handleAdminSaveMember(e) {
+      e.preventDefault();
+      const editId = document.getElementById('edit-member-id').value;
+      const nama = document.getElementById('input-member-nama').value.trim();
+      const username = document.getElementById('input-member-username').value.trim();
+      const npam = document.getElementById('input-member-npam').value.trim().toUpperCase();
+      const divisi = document.getElementById('input-member-divisi').value;
+
+      let members = getMembers();
+      if (editId) {
+        members = members.map(m => m.id === editId ? { ...m, nama, username, npam, divisi } : m);
+        showToast('Data anggota diperbarui!', 'success');
+      } else {
+        members.push({ id: 'm_' + Date.now(), nama, username, npam, divisi });
+        showToast('Anggota baru ditambahkan!', 'success');
+      }
+      saveMembers(members);
+      resetAdminMemberForm();
+      refreshAdminData();
+    }
+
+    function editAdminMember(id) {
+      const m = getMembers().find(item => item.id === id);
+      if (!m) return;
+      document.getElementById('form-member-heading').innerHTML = '<i class="fa-solid fa-user-pen text-amber-400"></i> Edit Anggota';
+      document.getElementById('edit-member-id').value = m.id;
+      document.getElementById('input-member-nama').value = m.nama;
+      document.getElementById('input-member-username').value = m.username || '';
+      document.getElementById('input-member-npam').value = m.npam;
+      document.getElementById('input-member-divisi').value = m.divisi;
+      document.getElementById('btn-save-member').textContent = 'Update';
+      document.getElementById('btn-cancel-member').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetAdminMemberForm() {
+      document.getElementById('form-member-heading').innerHTML = '<i class="fa-solid fa-user-plus text-amber-400"></i> Tambah / Edit Data & Akun Login Anggota';
+      document.getElementById('edit-member-id').value = '';
+      document.getElementById('input-member-nama').value = '';
+      document.getElementById('input-member-username').value = '';
+      document.getElementById('input-member-npam').value = '';
+      document.getElementById('btn-save-member').textContent = 'Simpan';
+      document.getElementById('btn-cancel-member').classList.add('hidden');
+    }
+
+    function deleteAdminMember(id) {
+      openConfirmModal('Hapus Anggota?', 'Akun akan dihapus permanen.', () => {
+        saveMembers(getMembers().filter(m => m.id !== id));
+        showToast('Anggota dihapus.', 'info');
+        refreshAdminData();
+      });
+    }
+
+    function renderAdminMembersTable() {
+      const q = (document.getElementById('admin-search-member')?.value || '').toLowerCase();
+      const members = getMembers().filter(m => m.nama.toLowerCase().includes(q) || (m.username && m.username.toLowerCase().includes(q)) || m.npam.toLowerCase().includes(q));
+      const tbody = document.getElementById('admin-members-tbody');
+      if (members.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-xs text-slate-400">Tidak ada anggota.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = members.map((m, idx) => `
+        <tr class="hover:bg-navy-800/40 transition">
+          <td class="py-3.5 px-4 text-xs text-slate-400">${idx + 1}</td>
+          <td class="py-3.5 px-4 font-bold text-white text-xs sm:text-sm">${m.nama}</td>
+          <td class="py-3.5 px-4 font-mono text-xs text-blue-300">${m.username || '-'}</td>
+          <td class="py-3.5 px-4 font-mono text-xs text-amber-400 font-bold">${m.npam}</td>
+          <td class="py-3.5 px-4 text-xs text-slate-300">${m.divisi}</td>
+          <td class="py-3.5 px-4 text-right whitespace-nowrap">
+            <button onclick="editAdminMember('${m.id}')" class="px-2.5 py-1.5 rounded-lg bg-navy-800 hover:bg-navy-700 text-amber-400 text-xs font-bold mr-1"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="deleteAdminMember('${m.id}')" class="px-2.5 py-1.5 rounded-lg bg-red-950/70 hover:bg-red-900 text-red-300 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderAdminDivisiSection() {
+      const members = getMembers();
+      const grouped = {};
+      members.forEach(m => {
+        if (!grouped[m.divisi]) grouped[m.divisi] = [];
+        grouped[m.divisi].push(m);
+      });
+      document.getElementById('admin-divisi-grid').innerHTML = Object.entries(grouped).map(([divisi, list]) => `
+        <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5 flex flex-col">
+          <div class="flex items-center justify-between pb-3 mb-3 border-b border-navy-700">
+            <h3 class="text-sm font-extrabold text-amber-400"><i class="fa-solid fa-compass mr-1.5"></i>${divisi}</h3>
+            <span class="px-2.5 py-0.5 rounded-full bg-navy-900 text-[11px] font-bold text-slate-300">${list.length} Anggota</span>
+          </div>
+          <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+            ${list.map(m => `<div class="px-3 py-2 rounded-xl bg-navy-900 border border-navy-700/70 flex items-center justify-between text-xs"><span class="font-bold text-slate-200">${m.nama}</span><span class="font-mono text-[11px] text-slate-400">${m.npam}</span></div>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function handleAdminSaveKegiatan(e) {
+      e.preventDefault();
+      const editId = document.getElementById('edit-kegiatan-id').value;
+      const judul = document.getElementById('input-kegiatan-judul').value.trim();
+      const kategori = document.getElementById('input-kegiatan-kategori').value;
+      const tanggal = document.getElementById('input-kegiatan-tanggal').value;
+      const lokasi = document.getElementById('input-kegiatan-lokasi').value.trim();
+      const deskripsi = document.getElementById('input-kegiatan-deskripsi').value.trim();
+
+      let list = getKegiatanList();
+      if (editId) {
+        list = list.map(k => k.id === editId ? { ...k, judul, kategori, tanggal, lokasi, deskripsi } : k);
+        showToast('Kegiatan diperbarui!', 'success');
+      } else {
+        list.unshift({ id: 'keg_' + Date.now(), judul, kategori, tanggal, lokasi, deskripsi });
+        showToast('Kegiatan dipublikasikan!', 'success');
+      }
+      saveKegiatanList(list);
+      resetAdminKegiatanForm();
+      refreshAdminData();
+    }
+
+    function editAdminKegiatan(id) {
+      const k = getKegiatanList().find(item => item.id === id);
+      if (!k) return;
+      document.getElementById('form-kegiatan-heading').innerHTML = '<i class="fa-solid fa-pen-to-square text-amber-400"></i> Edit Kegiatan';
+      document.getElementById('edit-kegiatan-id').value = k.id;
+      document.getElementById('input-kegiatan-judul').value = k.judul;
+      document.getElementById('input-kegiatan-kategori').value = k.kategori;
+      document.getElementById('input-kegiatan-tanggal').value = k.tanggal;
+      document.getElementById('input-kegiatan-lokasi').value = k.lokasi;
+      document.getElementById('input-kegiatan-deskripsi').value = k.deskripsi;
+      document.getElementById('btn-cancel-kegiatan').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetAdminKegiatanForm() {
+      document.getElementById('form-kegiatan-heading').innerHTML = '<i class="fa-solid fa-bullhorn text-amber-400"></i> Buat / Edit Jadwal & Pemberitahuan Kegiatan';
+      document.getElementById('edit-kegiatan-id').value = '';
+      document.getElementById('input-kegiatan-judul').value = '';
+      document.getElementById('input-kegiatan-tanggal').value = '';
+      document.getElementById('input-kegiatan-lokasi').value = '';
+      document.getElementById('input-kegiatan-deskripsi').value = '';
+      document.getElementById('btn-cancel-kegiatan').classList.add('hidden');
+    }
+
+    function deleteAdminKegiatan(id) {
+      openConfirmModal('Hapus Kegiatan?', 'Pengumuman ini akan dihapus.', () => {
+        saveKegiatanList(getKegiatanList().filter(k => k.id !== id));
+        showToast('Kegiatan dihapus.', 'info');
+        refreshAdminData();
+      });
+    }
+
+    function renderAdminKegiatanSection() {
+      const list = getKegiatanList();
+      const grid = document.getElementById('admin-kegiatan-grid');
+      if (list.length === 0) {
+        grid.innerHTML = `<div class="col-span-full bg-navy-850 border border-navy-700 rounded-2xl p-8 text-center text-xs text-slate-400">Belum ada kegiatan.</div>`;
+        return;
+      }
+      grid.innerHTML = list.map(k => `
+        <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5 flex flex-col justify-between gap-4">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[11px] font-bold">${k.kategori}</span>
+              <span class="text-xs text-slate-400">${formatDateIndo(k.tanggal)}</span>
+            </div>
+            <h3 class="text-base font-extrabold text-white">${k.judul}</h3>
+            <p class="text-xs text-slate-400 mt-1"><i class="fa-solid fa-location-dot text-amber-400 mr-1.5"></i>${k.lokasi}</p>
+            <p class="text-xs text-slate-300 mt-3 bg-navy-900/80 p-3 rounded-xl border border-navy-700/70">${k.deskripsi}</p>
+          </div>
+          <div class="flex justify-end gap-2 pt-2 border-t border-navy-700/60">
+            <button onclick="editAdminKegiatan('${k.id}')" class="px-3 py-1.5 rounded-lg bg-navy-800 text-amber-400 text-xs font-bold"><i class="fa-solid fa-pen mr-1"></i> Edit</button>
+            <button onclick="deleteAdminKegiatan('${k.id}')" class="px-3 py-1.5 rounded-lg bg-red-950/70 text-red-300 text-xs font-bold"><i class="fa-solid fa-trash mr-1"></i> Hapus</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function saveAllChangesManual() {
+      showToast('Perubahan tersimpan aman!', 'success');
+    }
+
+    function confirmResetDemo() {
+      openConfirmModal('Reset Data Awal?', 'Seluruh data akan dipulihkan ke awal.', () => {
+        seedInitialData(true);
+        showToast('Data awal berhasil dipulihkan!', 'success');
+        refreshAdminData();
+      });
+    }
+
+    // DASHBOARD ANGGOTA
+    function renderMemberSidebar() {
+      const rapats = getRapatList();
+      const openRapatCount = rapats.filter(r => r.status === 'Dibuka').length;
+      const kegiatans = getKegiatanList();
+
+      const menus = [
+        { id: 'piket', label: 'Absen Piket', icon: 'fa-clipboard-check', badge: null },
+        { id: 'rapat', label: 'Absen Rapat', icon: 'fa-handshake', badge: openRapatCount > 0 ? `${openRapatCount} Dibuka` : null, badgeStyle: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' },
+        { id: 'kegiatan', label: 'Pemberitahuan Kegiatan', icon: 'fa-bullhorn', badge: String(kegiatans.length), badgeStyle: 'bg-navy-800 text-slate-300 border-navy-700' }
+      ];
+
+      document.getElementById('sidebar-nav-list').innerHTML = menus.map(m => {
+        const isActive = activeMemberMenu === m.id;
+        return `
+          <button onclick="switchMemberMenu('${m.id}')" class="w-full py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 ${isActive ? 'sidebar-item-active' : 'sidebar-item-inactive'}">
+            <span class="flex items-center gap-3 truncate">
+              <i class="fa-solid ${m.icon} w-4 text-center ${isActive ? 'text-amber-400' : 'text-slate-400'}"></i>
+              <span class="truncate">${m.label}</span>
+            </span>
+            ${m.badge ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${m.badgeStyle}">${m.badge}</span>` : ''}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function switchMemberMenu(menuId) {
+      activeMemberMenu = menuId;
+      toggleMobileSidebar(false);
+      renderMemberSidebar();
+
+      document.querySelectorAll('.member-panel').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById(`member-tab-${menuId}`);
+      if (target) target.classList.remove('hidden');
+
+      const headers = {
+        'piket': ['Absensi Piket Sekretariat', 'Isi absensi piket Anda dan unggah foto dokumentasi kegiatan piket hari ini.'],
+        'rapat': ['Absensi Rapat Organisasi', 'Konfirmasi kehadiran Anda pada sesi rapat Mapala MUCI yang sedang dibuka.'],
+        'kegiatan': ['Pemberitahuan & Jadwal Kegiatan', 'Informasi resmi agenda kegiatan dan latihan rutin Mapala MUCI.']
+      };
+
+      const [title, sub] = headers[menuId] || headers['piket'];
+      document.getElementById('page-header-title').textContent = title;
+      document.getElementById('page-header-subtitle').textContent = sub;
+
+      refreshMemberData();
+    }
+
+    function refreshMemberData() {
+      const session = getSession();
+      if (!session || session.role !== 'anggota') return;
+      const member = getMembers().find(m => m.id === session.memberId);
+      if (!member) { handleLogout(); return; }
+
+      renderMemberSidebar();
+
+      document.getElementById('member-locked-nama').value = member.nama;
+      document.getElementById('member-locked-npam').value = member.npam;
+      document.getElementById('member-today-pill').textContent = `${getTodayDayName()}, ${formatDateIndo(getTodayISO())}`;
+
+      const jadwal = getJadwal();
+      const myDays = URUTAN_HARI.filter(day => (jadwal[day] || []).includes(member.id));
+      document.getElementById('member-routine-days').textContent = myDays.length > 0 ? myDays.join(', ') : 'Belum dijadwalkan';
+
+      const myLogs = getPiketLogs().filter(l => l.memberId === member.id);
+      document.getElementById('member-my-logs-badge').textContent = `${myLogs.length} Catatan`;
+
+      const tbody = document.getElementById('member-my-piket-tbody');
+      if (myLogs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-xs text-slate-400">Anda belum memiliki catatan absensi piket.</td></tr>`;
+      } else {
+        tbody.innerHTML = myLogs.map(l => {
+          const badge = l.status === 'Hadir' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35' : 'bg-amber-500/15 text-amber-300 border-amber-500/35';
+          const fotoBtn = l.foto ? `<button onclick="openPhotoModal('${l.id}')" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-indigo-500/15 text-indigo-300 text-[11px] font-bold mb-1"><i class="fa-solid fa-image"></i> Foto</button>` : '';
+          return `
+            <tr>
+              <td class="py-3 px-4 font-bold text-white text-xs">${formatDateIndo(l.tanggal)}</td>
+              <td class="py-3 px-4 font-mono text-xs text-slate-400">${l.jam} WIB</td>
+              <td class="py-3 px-4"><span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${badge}">${l.status}</span></td>
+              <td class="py-3 px-4 text-xs text-slate-300"><div>${fotoBtn}</div><p>${l.keterangan || '-'}</p></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      const members = getMembers();
+      document.getElementById('member-readonly-jadwal').innerHTML = URUTAN_HARI.map(day => {
+        const names = (jadwal[day] || []).map(id => members.find(m => m.id === id)?.nama).filter(Boolean);
+        return `<div class="p-3 rounded-xl bg-navy-900 border border-navy-700/80"><div class="font-extrabold text-amber-400 mb-1">${day}</div><div class="text-[11px] text-slate-300">${names.length > 0 ? names.join(', ') : '-'}</div></div>`;
+      }).join('');
+
+      const rapats = getRapatList();
+      document.getElementById('member-rapat-grid').innerHTML = rapats.length === 0 ? `<div class="col-span-full bg-navy-850 border border-navy-700 rounded-2xl p-8 text-center text-xs text-slate-400">Belum ada rapat dibuka.</div>` : rapats.map(r => {
+        const isOpen = r.status === 'Dibuka';
+        const alreadyPresent = (r.attendees || []).find(a => a.memberId === member.id);
+        let btn = alreadyPresent ? `<div class="py-2.5 px-4 rounded-xl bg-emerald-500/15 text-emerald-300 text-xs font-bold text-center"><i class="fa-solid fa-circle-check mr-1.5"></i> Sudah Hadir (${alreadyPresent.jam} WIB)</div>` : (isOpen ? `<button onclick="handleMemberConfirmRapat('${r.id}')" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 text-xs font-extrabold transition">Konfirmasi Hadir Rapat</button>` : `<div class="py-2.5 px-4 rounded-xl bg-navy-900 text-slate-500 text-xs font-bold text-center">Ditutup</div>`);
+        return `
+          <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5 flex flex-col justify-between gap-4">
+            <div>
+              <div class="flex items-start justify-between gap-2"><h3 class="text-base font-extrabold text-white">${r.judul}</h3><span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${isOpen ? 'bg-emerald-500/15 text-emerald-300' : 'bg-navy-900 text-slate-400'}">${r.status}</span></div>
+              <div class="text-xs text-slate-400 mt-2 space-y-1"><div><i class="fa-regular fa-calendar text-amber-400 mr-1.5"></i>${formatDateIndo(r.tanggal)} • ${r.waktu} WIB</div><div><i class="fa-solid fa-location-dot text-amber-400 mr-1.5"></i>${r.lokasi}</div></div>
+            </div>
+            <div>${btn}</div>
+          </div>
+        `;
+      }).join('');
+
+      const kegiatans = getKegiatanList();
+      document.getElementById('member-kegiatan-grid').innerHTML = kegiatans.length === 0 ? `<div class="col-span-full bg-navy-850 border border-navy-700 rounded-2xl p-8 text-center text-xs text-slate-400">Belum ada kegiatan.</div>` : kegiatans.map(k => `
+        <div class="bg-navy-850 border border-navy-700 rounded-2xl p-5">
+          <div class="flex items-center justify-between gap-2 mb-2"><span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[11px] font-bold">${k.kategori}</span><span class="text-xs text-slate-400">${formatDateIndo(k.tanggal)}</span></div>
+          <h3 class="text-base font-extrabold text-white">${k.judul}</h3>
+          <p class="text-xs text-slate-400 mt-1"><i class="fa-solid fa-location-dot text-amber-400 mr-1.5"></i>${k.lokasi}</p>
+          <p class="text-xs text-slate-300 mt-3 bg-navy-900/90 p-3.5 rounded-xl border border-navy-700/70">${k.deskripsi}</p>
+        </div>
+      `).join('');
+    }
+
+    let compressedPiketPhoto = '';
+    function handleMemberPhotoUpload(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const img = new Image();
+        img.onload = function () {
+          const canvas = document.createElement('canvas');
+          const maxSize = 800;
+          let w = img.width, h = img.height;
+          if (w > maxSize || h > maxSize) {
+            if (w > h) { h = Math.round((h * maxSize) / w); w = maxSize; }
+            else { w = Math.round((w * maxSize) / h); h = maxSize; }
+          }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          compressedPiketPhoto = canvas.toDataURL('image/jpeg', 0.72);
+          document.getElementById('member-photo-preview-img').src = compressedPiketPhoto;
+          document.getElementById('member-photo-empty').classList.add('hidden');
+          document.getElementById('member-photo-preview-box').classList.remove('hidden');
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function resetMemberPhotoInput() {
+      compressedPiketPhoto = '';
+      const fileInput = document.getElementById('member-piket-file');
+      if (fileInput) fileInput.value = '';
+      document.getElementById('member-photo-preview-img').src = '';
+      document.getElementById('member-photo-empty').classList.remove('hidden');
+      document.getElementById('member-photo-preview-box').classList.add('hidden');
+    }
+
+    function handleMemberSubmitPiket(e) {
+      e.preventDefault();
+      const session = getSession();
+      if (!session || session.role !== 'anggota') return;
+      const member = getMembers().find(m => m.id === session.memberId);
+      if (!member) return;
+
+      const todayISO = getTodayISO();
+      const logs = getPiketLogs();
+      if (logs.some(l => l.memberId === member.id && l.tanggal === todayISO)) {
+        showToast('Anda sudah absen piket hari ini!', 'info');
+        return;
+      }
+
+      const status = document.querySelector('input[name="member-piket-status"]:checked').value;
+      const keterangan = document.getElementById('member-piket-keterangan').value.trim();
+
+      if (status === 'Hadir' && !compressedPiketPhoto) {
+        showToast('Wajib unggah foto dokumentasi piket!', 'error');
+        return;
+      }
+
+      logs.unshift({
+        id: 'log_' + Date.now(),
+        memberId: member.id,
+        nama: member.nama,
+        npam: member.npam,
+        tanggal: todayISO,
+        jam: getCurrentHHMM(),
+        status,
+        keterangan: keterangan || 'Piket sekretariat',
+        foto: compressedPiketPhoto || ''
+      });
+
+      savePiketLogs(logs);
+      document.getElementById('member-piket-keterangan').value = '';
+      resetMemberPhotoInput();
+      showToast('Absensi piket berhasil dikirim!', 'success');
+      refreshMemberData();
+    }
+
+    function handleMemberConfirmRapat(rapatId) {
+      const session = getSession();
+      if (!session || session.role !== 'anggota') return;
+      const rapats = getRapatList().map(r => {
+        if (r.id !== rapatId || r.status !== 'Dibuka') return r;
+        if ((r.attendees || []).some(a => a.memberId === session.memberId)) return r;
+        return { ...r, attendees: [...(r.attendees || []), { memberId: session.memberId, jam: getCurrentHHMM() }] };
+      });
+      saveRapatList(rapats);
+      showToast('Kehadiran rapat dikonfirmasi!', 'success');
+      refreshMemberData();
+    }
+
+    function openPhotoModal(logId) {
+      const log = getPiketLogs().find(l => l.id === logId);
+      if (!log || !log.foto) return;
+      document.getElementById('photo-modal-title').textContent = `Dokumentasi — ${log.nama}`;
+      document.getElementById('photo-modal-sub').textContent = `${formatDateIndo(log.tanggal)} • ${log.jam} WIB`;
+      document.getElementById('photo-modal-img').src = log.foto;
+      document.getElementById('modal-photo-viewer').classList.remove('hidden');
+      document.getElementById('modal-photo-viewer').classList.add('flex');
+    }
+
+    function closePhotoModal() {
+      document.getElementById('modal-photo-viewer').classList.add('hidden');
+      document.getElementById('modal-photo-viewer').classList.remove('flex');
+    }
+
+    window.onload = function () {
+      seedInitialData(false);
+      updateLiveClock();
+      setInterval(updateLiveClock, 1000);
+      initWorkspace();
+    };
+  </script>
+</body>
+</html>
